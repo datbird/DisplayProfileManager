@@ -19,6 +19,8 @@ using DisplayProfileManager.Scripts.Models;
 using DisplayProfileManager.Settings;
 using DisplayProfileManager.Settings.Models;
 using DisplayProfileManager.Settings.Persistence;
+using DisplayProfileManager.Vrr;
+using DisplayProfileManager.Vrr.Models;
 using DisplayProfileManager.Wallpapers;
 using DisplayProfileManager.Wallpapers.Models;
 
@@ -214,6 +216,7 @@ namespace DisplayProfileManager.Tests.Profiles
                 adapter,
                 new FakeWallpaperService(),
                 new FakeAudioDeviceService(),
+                new FakeVrrService(),
                 new FakeMouseSettingsService(),
                 new FakeScriptRunner(),
                 settings,
@@ -345,10 +348,16 @@ namespace DisplayProfileManager.Tests.Profiles
             public bool ApplyAudioSettings(AudioSetting settings) => true;
         }
 
-private sealed class FakeMouseSettingsService : IMouseSettingsService
+        private sealed class FakeMouseSettingsService : IMouseSettingsService
         {
             public MouseSetting CaptureCurrent() => new();
             public bool ApplyMouseSettings(MouseSetting settings) => true;
+        }
+
+        private sealed class FakeVrrService : IVrrService
+        {
+            public VrrCapability GetCapability() => VrrCapability.Unavailable;
+            public bool ApplyVrrSettings(VrrSetting settings) => true;
         }
 
         private sealed class FakeScriptRunner : IScriptRunner

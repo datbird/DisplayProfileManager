@@ -16,6 +16,7 @@ using DisplayProfileManager.Profiles.Persistence;
 using DisplayProfileManager.Profiles.Policy;
 using DisplayProfileManager.Scripts.Models;
 using DisplayProfileManager.Settings;
+using DisplayProfileManager.Vrr.Models;
 using DisplayProfileManager.Wallpapers.Models;
 
 namespace DisplayProfileManager.Profiles
@@ -124,6 +125,11 @@ namespace DisplayProfileManager.Profiles
                     ApplyPlaybackDevice = sourceProfile.AudioSettings.ApplyPlaybackDevice,
                     ApplyCaptureDevice = sourceProfile.AudioSettings.ApplyCaptureDevice
                 } : new AudioSetting(),
+                VrrSettings = sourceProfile.VrrSettings != null ? new VrrSetting
+                {
+                    Enabled = sourceProfile.VrrSettings.Enabled,
+                    Mode = sourceProfile.VrrSettings.Mode
+                } : new VrrSetting(),
                 MouseSettings = sourceProfile.MouseSettings?.Clone() ?? new MouseSetting(),
                 WallpaperSettings = sourceProfile.WallpaperSettings != null ? new WallpaperSettings
                 {

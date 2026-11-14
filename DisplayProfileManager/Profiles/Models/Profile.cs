@@ -8,6 +8,7 @@ using DisplayProfileManager.Displays.Models;
 using DisplayProfileManager.Hotkeys.Models;
 using DisplayProfileManager.Pointer.Models;
 using DisplayProfileManager.Scripts.Models;
+using DisplayProfileManager.Vrr.Models;
 using DisplayProfileManager.Wallpapers.Models;
 
 namespace DisplayProfileManager.Profiles.Models
@@ -34,6 +35,8 @@ namespace DisplayProfileManager.Profiles.Models
         public WallpaperSettings WallpaperSettings { get; set; } = null;
         [JsonProperty("audioSettings")]
         public AudioSetting AudioSettings { get; set; } = new AudioSetting();
+        [JsonProperty("vrrSettings")]
+        public VrrSetting VrrSettings { get; set; } = new VrrSetting();
         [JsonProperty("mouseSettings")]
         public MouseSetting MouseSettings { get; set; } = new MouseSetting();
         [JsonProperty("scriptSettings")]

@@ -19,6 +19,8 @@ using DisplayProfileManager.Scripts;
 using DisplayProfileManager.Settings;
 using DisplayProfileManager.Settings.Models;
 using DisplayProfileManager.Settings.Persistence;
+using DisplayProfileManager.Vrr;
+using DisplayProfileManager.Vrr.Models;
 using DisplayProfileManager.Wallpapers;
 using DisplayProfileManager.Wallpapers.Models;
 
@@ -202,6 +204,7 @@ namespace DisplayProfileManager.Tests.Application
                     new ScriptLibrary(_tempFolder),
                     Audio,
                     new FakeMouseSettingsService(),
+                    new FakeVrrService(),
                     Wallpaper);
             }
 
@@ -238,10 +241,16 @@ namespace DisplayProfileManager.Tests.Application
             public Task<bool> SaveAsync(AppSettings settings) => Task.FromResult(true);
         }
 
-private sealed class FakeMouseSettingsService : IMouseSettingsService
+        private sealed class FakeMouseSettingsService : IMouseSettingsService
         {
             public MouseSetting CaptureCurrent() => new();
             public bool ApplyMouseSettings(MouseSetting settings) => true;
+        }
+
+        private sealed class FakeVrrService : IVrrService
+        {
+            public VrrCapability GetCapability() => VrrCapability.Unavailable;
+            public bool ApplyVrrSettings(VrrSetting settings) => true;
         }
 
         private sealed class FakeAudioDeviceService : IAudioDeviceService

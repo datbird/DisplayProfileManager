@@ -12,6 +12,7 @@ using DisplayProfileManager.Hotkeys.Models;
 using DisplayProfileManager.Pointer.Models;
 using DisplayProfileManager.Profiles.Models;
 using DisplayProfileManager.Scripts.Models;
+using DisplayProfileManager.Vrr.Models;
 using DisplayProfileManager.Wallpapers.Models;
 
 namespace DisplayProfileManager.Profiles.Persistence
@@ -35,6 +36,7 @@ namespace DisplayProfileManager.Profiles.Persistence
 
             RecoverScriptEntries(root);
             RecoverOptionalProperty(root, "audioSettings", typeof(AudioSetting));
+            RecoverOptionalProperty(root, "vrrSettings", typeof(VrrSetting));
             RecoverOptionalProperty(root, "mouseSettings", typeof(MouseSetting));
             RecoverOptionalProperty(root, "wallpaperSettings", typeof(WallpaperSettings));
             RecoverOptionalProperty(root, "scriptSettings", typeof(ScriptSettings));

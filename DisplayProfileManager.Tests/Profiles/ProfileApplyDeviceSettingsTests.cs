@@ -18,6 +18,8 @@ using DisplayProfileManager.Settings.Models;
 using DisplayProfileManager.Settings.Persistence;
 using DisplayProfileManager.UI.Presentation;
 using DisplayProfileManager.Wallpapers;
+using DisplayProfileManager.Vrr;
+using DisplayProfileManager.Vrr.Models;
 using DisplayProfileManager.Wallpapers.Models;
 
 namespace DisplayProfileManager.Tests.Profiles
@@ -88,6 +90,7 @@ namespace DisplayProfileManager.Tests.Profiles
                     this,
                     new FakeWallpaperService(),
                     new FakeAudioDeviceService(),
+                    new NoVrrService(),
                     this,
                     new FakeScriptRunner(),
                     settings,
@@ -166,6 +169,12 @@ namespace DisplayProfileManager.Tests.Profiles
                 _settings = settings;
                 return Task.FromResult(true);
             }
+        }
+
+        private sealed class NoVrrService : IVrrService
+        {
+            public VrrCapability GetCapability() => VrrCapability.Unavailable;
+            public bool ApplyVrrSettings(VrrSetting settings) => true;
         }
     }
 }

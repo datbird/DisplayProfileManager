@@ -16,6 +16,7 @@ using DisplayProfileManager.Scripts;
 using DisplayProfileManager.Settings;
 using DisplayProfileManager.Settings.Persistence;
 using DisplayProfileManager.Tests.Helpers;
+using DisplayProfileManager.Vrr;
 using DisplayProfileManager.Wallpapers;
 
 namespace DisplayProfileManager.Tests.Profiles
@@ -246,6 +247,7 @@ namespace DisplayProfileManager.Tests.Profiles
                     runtime,
                     new WallpaperService(),
                     new AudioDeviceService(),
+                    new VrrService(),
                     new MouseSettingsService(),
                     new ScriptRunner(scripts),
                     settings,

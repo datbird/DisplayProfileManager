@@ -18,6 +18,7 @@ using DisplayProfileManager.Profiles.Policy;
 using DisplayProfileManager.Scripts;
 using DisplayProfileManager.Settings;
 using DisplayProfileManager.UI.Presentation;
+using DisplayProfileManager.Vrr;
 using DisplayProfileManager.Wallpapers;
 using DisplayProfileManager.Wallpapers.Models;
 
@@ -34,6 +35,7 @@ namespace DisplayProfileManager.Profiles
         IDisplayApplyAdapter displayApply,
         IWallpaperService wallpaperService,
         IAudioDeviceService audioService,
+        IVrrService vrrService,
         IMouseSettingsService mouseService,
         IScriptRunner scriptRunner,
         SettingsService settingsService,
@@ -50,6 +52,7 @@ namespace DisplayProfileManager.Profiles
         private readonly IDisplayApplyAdapter _displayApply = displayApply ?? throw new ArgumentNullException(nameof(displayApply));
         private readonly IDisplayEventEvidenceScopeProvider _displayEventEvidence = displayEventEvidence;
         private readonly IWallpaperService _wallpaperService = wallpaperService ?? throw new ArgumentNullException(nameof(wallpaperService));
+        private readonly IVrrService _vrrService = vrrService ?? throw new ArgumentNullException(nameof(vrrService));
         private readonly IAudioDeviceService _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService));
         private readonly IMouseSettingsService _mouseService = mouseService ?? throw new ArgumentNullException(nameof(mouseService));
         private readonly IScriptRunner _scriptRunner = scriptRunner ?? throw new ArgumentNullException(nameof(scriptRunner));
@@ -108,6 +111,12 @@ namespace DisplayProfileManager.Profiles
                             $"Cannot safely resolve current display address for '{setting.ReadableDeviceName}' ({resolutionStatus}); refusing topology mutation."));
                 }
                 mapWatch.Stop();
+
+                // Apply variable refresh rate before the display stage so an on/off modeset settles before the layout is applied
+                var vrrWatch = Stopwatch.StartNew();
+                if (profile.VrrSettings?.Enabled == true)
+                    result.VrrSuccess = _vrrService.ApplyVrrSettings(profile.VrrSettings);
+                vrrWatch.Stop();
 
                 // Apply Display Topology
                 var topologyWatch = Stopwatch.StartNew();
@@ -253,7 +262,7 @@ namespace DisplayProfileManager.Profiles
                 }
 
                 // Timing Summary
-                _logger.Info($"[PERF] Map: {mapWatch.ElapsedMilliseconds} ms | Topology: {topologyWatch.ElapsedMilliseconds} ms | Config: {configWatch.ElapsedMilliseconds} ms");
+                _logger.Info($"[PERF] Map: {mapWatch.ElapsedMilliseconds} ms | VRR: {vrrWatch.ElapsedMilliseconds} ms | Topology: {topologyWatch.ElapsedMilliseconds} ms | Config: {configWatch.ElapsedMilliseconds} ms");
                 _logger.Info($"[PERF] DPI: {dpiWatch.ElapsedMilliseconds} ms | Wallpaper: {wallpaperWatch.ElapsedMilliseconds} ms | Audio: {audioWatch.ElapsedMilliseconds} ms | Mouse: {mouseWatch.ElapsedMilliseconds} ms | Scripts: {scriptWatch.ElapsedMilliseconds} ms");
                 _logger.Info($"[PERF] Finalize: {finalizeWatch.ElapsedMilliseconds} ms | TOTAL: {totalWatch.ElapsedMilliseconds} ms");
 

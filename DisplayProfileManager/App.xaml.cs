@@ -26,6 +26,7 @@ using DisplayProfileManager.UI.Presentation;
 using DisplayProfileManager.UI.Themes;
 using DisplayProfileManager.UI.Tray;
 using DisplayProfileManager.UI.Windows;
+using DisplayProfileManager.Vrr;
 using DisplayProfileManager.Wallpapers;
 
 namespace DisplayProfileManager
@@ -55,6 +56,7 @@ namespace DisplayProfileManager
         private IScriptRunner _scriptRunner;
         private IWallpaperService _wallpaperService;
         private IAudioDeviceService _audioService;
+        private IVrrService _vrrService;
         private IMouseSettingsService _mouseService;
         private IDisplayApplyAdapter _displayApplyAdapter;
         private DisplayEditorService _displayEditorService;
@@ -368,6 +370,7 @@ namespace DisplayProfileManager
             _scriptLibrary = new ScriptLibrary(appData);
             _scriptRunner = new ScriptRunner(_scriptLibrary);
             _wallpaperService = new WallpaperService();
+            _vrrService = new VrrService();
             _audioService = new AudioDeviceService();
             _mouseService = new MouseSettingsService();
             _displayApplyAdapter = new DisplayApplyAdapter(() => engineeringOverrides.ForceTopologyRecovery, displayEventOptions.TraceEnabled);
@@ -399,6 +402,7 @@ namespace DisplayProfileManager
                 _displayApplyAdapter,
                 _wallpaperService,
                 _audioService,
+                _vrrService,
                 _mouseService,
                 _scriptRunner,
                 _settingsService,
@@ -428,6 +432,7 @@ namespace DisplayProfileManager
                 _scriptLibrary,
                 _audioService,
                 _mouseService,
+                _vrrService,
                 _wallpaperService);
             _trayMenuController = new TrayMenuController(_profileService, _profileApplyService);
             _singleInstanceCoordinator = new SingleInstanceCoordinator();
