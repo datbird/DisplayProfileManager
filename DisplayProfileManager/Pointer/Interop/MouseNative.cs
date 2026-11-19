@@ -19,6 +19,9 @@ namespace DisplayProfileManager.Pointer.Interop
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool SystemParametersInfo(uint action, uint uiParam, [In, Out] int[] pvParam, uint winIni);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint msg, UIntPtr wParam, IntPtr lParam, uint flags, uint timeout, out UIntPtr result);
+
         [DllImport("user32.dll")]
         internal static extern uint GetDoubleClickTime();
 
@@ -42,7 +45,11 @@ namespace DisplayProfileManager.Pointer.Interop
         internal const uint SpiGetMouseSpeed = 0x0070;
         internal const uint SpiSetMouseSpeed = 0x0071;
 
-        internal const uint SpifUpdateIniFileAndSendChange = 0x0003;
+        internal const uint SpifUpdateIniFile = 0x0001;
+        internal static readonly IntPtr HwndBroadcast = new(0xFFFF);
+        internal const uint WmSettingChange = 0x001A;
+        internal const uint SmtoAbortIfHung = 0x0002;
+        internal const uint BroadcastTimeoutMs = 1000;
         internal const int SmSwapButton = 23;
 
         // Windows defaults for the two acceleration thresholds when Enhance pointer precision is on

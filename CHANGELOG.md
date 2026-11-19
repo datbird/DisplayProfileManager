@@ -11,7 +11,7 @@ For user-facing release notes, see the [GitHub Releases](https://github.com/exyt
 
 ### feat — mouse profile setting
 
-- **Per-profile Windows mouse settings** — profiles gain an optional `mouseSettings` section with independent `Apply*` flags for pointer speed (1-20), Enhance pointer precision, vertical wheel lines, horizontal wheel characters (1-100), primary-button swap, double-click speed (200-900 ms, `GetDoubleClickTime` / `SPI_SETDOUBLECLICKTIME`), and mouse trails (0 for off, 2-16, `SPI_GETMOUSETRAILS` / `SPI_SETMOUSETRAILS`; 1 is normalized to 0). Values are applied through `SystemParametersInfo` with `SPIF_UPDATEINIFILE | SPIF_SENDCHANGE` after the audio stage. Failures set `ProfileApplyResult.MouseSuccess = false`.
+- **Per-profile Windows mouse settings** — profiles gain an optional `mouseSettings` section with independent `Apply*` flags for pointer speed (1-20), Enhance pointer precision, vertical wheel lines, horizontal wheel characters (1-100), primary-button swap, double-click speed (200-900 ms, `GetDoubleClickTime` / `SPI_SETDOUBLECLICKTIME`), and mouse trails (0 for off, 2-16, `SPI_GETMOUSETRAILS` / `SPI_SETMOUSETRAILS`; 1 is normalized to 0). Values are applied through `SystemParametersInfo` with `SPIF_UPDATEINIFILE` after the audio stage. Only checked values that differ from the current Windows values are written (`MouseChangePlan`), and one `WM_SETTINGCHANGE` broadcast (`SendMessageTimeout`, `SMTO_ABORTIFHUNG`) runs off the apply path. Per-call `SPIF_SENDCHANGE` waited on every top-level window and cost about 2 s per switch. Failures set `ProfileApplyResult.MouseSuccess = false`.
 - **Pointer namespace** — the capability lives in `DisplayProfileManager.Pointer` because a `DisplayProfileManager.Mouse` namespace hides WPF's `System.Windows.Input.Mouse` inside the application namespace.
 
 ### feat — profile editor and details
@@ -21,7 +21,7 @@ For user-facing release notes, see the [GitHub Releases](https://github.com/exyt
 
 ### test — regression coverage
 
-- **Managed suite — 1,213 tests** — adds mouse apply ordering and warning coverage with a fake service, serialization round-trip, recovery, and working-copy coverage for the new member, and double-click clamping and mouse-trail normalization coverage.
+- **Managed suite — 1,217 tests** — adds mouse apply ordering and warning coverage with a fake service, serialization round-trip, recovery, and working-copy coverage for the new member, double-click clamping and mouse-trail normalization coverage, and change-plan coverage (unchanged, clamped, and changed values).
 
 ---
 
