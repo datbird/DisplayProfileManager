@@ -297,7 +297,7 @@ namespace DisplayProfileManager.Tests.Application
 
             public bool SetDefaultPlaybackDevice(string deviceId) => true;
             public bool SetDefaultCaptureDevice(string deviceId) => true;
-            public bool ApplyAudioSettings(AudioSetting settings) => true;
+            public AudioApplyOutcome ApplyAudioSettings(AudioSetting settings) => new();
         }
 
         private sealed class FakeWallpaperService : IWallpaperService

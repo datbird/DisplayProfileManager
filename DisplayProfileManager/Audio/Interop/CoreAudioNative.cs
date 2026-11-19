@@ -107,6 +107,13 @@ namespace DisplayProfileManager.Audio.Interop
         internal const uint StgmRead = 0x00000000;
         internal const ushort VtLpwstr = 31;
 
+        // Parent device instance path of an endpoint, like {1}.USB\VID_0909&PID_001C&MI_00\9&2F9204D7&0&0000
+        internal static readonly PROPERTYKEY PKEY_AudioEndpoint_ParentInstancePath = new()
+        {
+            fmtid = new Guid("b3f8fa53-0004-438e-9003-51a46e139bfc"),
+            pid = 2
+        };
+
         internal static readonly PROPERTYKEY PKEY_Device_FriendlyName = new()
         {
             fmtid = new Guid("a45c254e-df1c-4efd-8020-67d146a850e0"),

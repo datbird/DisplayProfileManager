@@ -12,6 +12,6 @@ namespace DisplayProfileManager.Audio
         AudioDeviceInfo GetDefaultCaptureDevice();
         bool SetDefaultPlaybackDevice(string deviceId);
         bool SetDefaultCaptureDevice(string deviceId);
-        bool ApplyAudioSettings(AudioSetting settings);
+        AudioApplyOutcome ApplyAudioSettings(AudioSetting settings);
     }
 }

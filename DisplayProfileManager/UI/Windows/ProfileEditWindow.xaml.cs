@@ -476,12 +476,14 @@ namespace DisplayProfileManager.UI.Windows
                 {
                     _profile.AudioSettings.DefaultPlaybackDeviceId = selectedOutput.Id;
                     _profile.AudioSettings.PlaybackDeviceName = selectedOutput.SystemName;
+                    _profile.AudioSettings.PlaybackHardwareId = selectedOutput.HardwareId ?? string.Empty;
                 }
 
                 if (InputDeviceComboBox.SelectedItem is AudioDeviceInfo selectedInput)
                 {
                     _profile.AudioSettings.DefaultCaptureDeviceId = selectedInput.Id;
                     _profile.AudioSettings.CaptureDeviceName = selectedInput.SystemName;
+                    _profile.AudioSettings.CaptureHardwareId = selectedInput.HardwareId ?? string.Empty;
                 }
 
                 // Mouse

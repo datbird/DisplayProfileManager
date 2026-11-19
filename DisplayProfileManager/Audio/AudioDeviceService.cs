@@ -16,7 +16,9 @@ namespace DisplayProfileManager.Audio
 
         private static IMMDeviceEnumerator CreateEnumerator() => (IMMDeviceEnumerator)new MMDeviceEnumeratorComObject();
 
-        internal static string GetDeviceFriendlyName(IMMDevice device)
+        internal static string GetDeviceFriendlyName(IMMDevice device) => GetStringProperty(device, PKEY_Device_FriendlyName, "friendly name");
+
+        private static string GetStringProperty(IMMDevice device, PROPERTYKEY propertyKey, string label)
         {
             IPropertyStore store = null;
             PROPVARIANT pv = default;
@@ -27,17 +29,17 @@ namespace DisplayProfileManager.Audio
                 int hr = device.OpenPropertyStore(StgmRead, out store);
                 if (hr < 0 || store == null)
                 {
-                    _logger.Warn($"Skipping device friendly name read -> OpenPropertyStore failed (0x{hr:X8})");
+                    _logger.Warn($"Skipping device {label} read -> OpenPropertyStore failed (0x{hr:X8})");
                     return null;
                 }
 
-                var key = PKEY_Device_FriendlyName;
+                var key = propertyKey;
                 hr = store.GetValue(ref key, out pv);
                 if (hr < 0)
                 {
                     // A failed call does not transfer ownership of the output value
                     pv = default;
-                    _logger.Warn($"Skipping device friendly name read -> GetValue failed (0x{hr:X8})");
+                    _logger.Debug($"Skipping device {label} read -> GetValue failed (0x{hr:X8})");
                     return null;
                 }
 
@@ -51,7 +53,7 @@ namespace DisplayProfileManager.Audio
             }
             catch (Exception ex)
             {
-                _logger.Warn(ex, "Failed to read device friendly name from property store");
+                _logger.Warn(ex, $"Failed to read device {label} from property store");
                 return null;
             }
             finally
@@ -81,6 +83,7 @@ namespace DisplayProfileManager.Audio
                 Id = id,
                 Name = friendlyName,
                 SystemName = friendlyName,
+                HardwareId = AudioDeviceMatcher.ToHardwareId(GetStringProperty(device, PKEY_AudioEndpoint_ParentInstancePath, "parent instance path")),
                 IsActive = state == DeviceStateActive,
                 Type = type
             };
@@ -374,59 +377,65 @@ namespace DisplayProfileManager.Audio
             }
         }
 
-        public bool ApplyAudioSettings(AudioSetting audioSettings)
+        public AudioApplyOutcome ApplyAudioSettings(AudioSetting audioSettings)
         {
+            var outcome = new AudioApplyOutcome();
             if (audioSettings == null)
             {
                 _logger.Debug("No audio settings to apply");
-                return true;
+                return outcome;
             }
-
-            bool allSucceeded = true;
 
             try
             {
-                if (audioSettings.ApplyPlaybackDevice)
-                {
-                    if (audioSettings.HasPlaybackDevice())
-                    {
-                        if (!SetDefaultPlaybackDevice(audioSettings.DefaultPlaybackDeviceId))
-                        {
-                            _logger.Warn($"Failed to set playback device: {audioSettings.PlaybackDeviceName}");
-                            allSucceeded = false;
-                        }
-                    }
-                    else
-                        _logger.Debug("Playback apply enabled but no device configured");
-                }
-                else
-                    _logger.Debug("Playback device apply disabled");
+                if (audioSettings.ApplyPlaybackDevice && audioSettings.HasPlaybackDevice())
+                    ApplyDevice(DeviceType.Playback, audioSettings.DefaultPlaybackDeviceId, audioSettings.PlaybackDeviceName, audioSettings.PlaybackHardwareId, outcome);
 
-                if (audioSettings.ApplyCaptureDevice)
-                {
-                    if (audioSettings.HasCaptureDevice())
-                    {
-                        if (!SetDefaultCaptureDevice(audioSettings.DefaultCaptureDeviceId))
-                        {
-                            _logger.Warn($"Failed to set capture device: {audioSettings.CaptureDeviceName}");
-                            allSucceeded = false;
-                        }
-                    }
-                    else
-                        _logger.Debug("Capture device apply enabled but no device configured");
-                }
-                else
-                    _logger.Debug("Capture device apply disabled");
+                if (audioSettings.ApplyCaptureDevice && audioSettings.HasCaptureDevice())
+                    ApplyDevice(DeviceType.Capture, audioSettings.DefaultCaptureDeviceId, audioSettings.CaptureDeviceName, audioSettings.CaptureHardwareId, outcome);
 
-                if (!allSucceeded)
+                if (!outcome.Success)
                     _logger.Warn("Some audio settings failed to apply");
 
-                return allSucceeded;
+                return outcome;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error applying audio settings");
-                return false;
+                outcome.Success = false;
+                return outcome;
+            }
+        }
+
+        private void ApplyDevice(DeviceType type, string savedId, string savedName, string savedHardwareId, AudioApplyOutcome outcome)
+        {
+            string label = type == DeviceType.Playback ? "playback" : "capture";
+            var active = type == DeviceType.Playback ? GetPlaybackDevices() : GetCaptureDevices();
+            var (device, kind) = AudioDeviceMatcher.Resolve(savedId, savedName, savedHardwareId, active);
+
+            if (device == null)
+            {
+                // Unplugged is not a failure; say so in the notification instead
+                _logger.Info($"Skipping {label} device -> not connected: {savedName} ({savedId})");
+                outcome.NotConnected.Add(string.IsNullOrEmpty(savedName) ? $"{label} device" : savedName);
+                return;
+            }
+
+            if (kind != AudioMatchKind.Id)
+                _logger.Info($"Matched {label} device '{device.SystemName}' by {kind.ToString().ToLowerInvariant()} -> saved ID {savedId} is now {device.Id}");
+
+            var current = type == DeviceType.Playback ? GetDefaultPlaybackDevice() : GetDefaultCaptureDevice();
+            if (current != null && string.Equals(current.Id, device.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Debug($"Skipping {label} device -> already default: {device.SystemName}");
+                return;
+            }
+
+            bool ok = type == DeviceType.Playback ? SetDefaultPlaybackDevice(device.Id) : SetDefaultCaptureDevice(device.Id);
+            if (!ok)
+            {
+                _logger.Warn($"Failed to set {label} device: {savedName}");
+                outcome.Success = false;
             }
         }
     }
