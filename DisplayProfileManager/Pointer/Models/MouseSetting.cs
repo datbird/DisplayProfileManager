@@ -61,6 +61,10 @@ namespace DisplayProfileManager.Pointer.Models
 
         public static int ClampDoubleClickTime(int milliseconds) => Math.Clamp(milliseconds, MinDoubleClickTime, MaxDoubleClickTime);
 
+        public int ClampedPointerSpeed() => Math.Clamp(PointerSpeed, MinPointerSpeed, MaxPointerSpeed);
+        public int ClampedVerticalScroll() => Math.Clamp(VerticalScrollLines, MinScrollAmount, MaxScrollAmount);
+        public int ClampedHorizontalScroll() => Math.Clamp(HorizontalScrollChars, MinScrollAmount, MaxScrollAmount);
+
         // Windows treats 0 and 1 as off; anything else is a trail length
         public static int NormalizeMouseTrails(int length) => length <= 1 ? 0 : Math.Min(length, MaxMouseTrails);
 

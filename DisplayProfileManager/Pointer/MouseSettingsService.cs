@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 using NLog;
 
@@ -53,55 +54,28 @@ namespace DisplayProfileManager.Pointer
         {
             if (settings == null || !settings.AppliesAny()) return true;
 
+            var changes = MouseChangePlan.Build(settings, CaptureCurrent());
+            if (changes.Count == 0)
+            {
+                _logger.Info($"Mouse settings already match -> {settings}");
+                return true;
+            }
+
             var failures = new List<string>();
+            uint lastAction = 0;
 
-            if (settings.ApplyPointerSpeed)
+            // Write each value without SPIF_SENDCHANGE, which waits on every top-level window per call
+            foreach (var change in changes)
             {
-                int speed = Math.Clamp(settings.PointerSpeed, MouseSetting.MinPointerSpeed, MouseSetting.MaxPointerSpeed);
-                if (!SystemParametersInfo(SpiSetMouseSpeed, 0, (IntPtr)speed, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"pointer speed ({Marshal.GetLastWin32Error()})");
+                var (action, ok, label) = Write(change, settings);
+                if (ok)
+                    lastAction = action;
+                else
+                    failures.Add($"{label} ({Marshal.GetLastWin32Error()})");
             }
 
-            if (settings.ApplyPointerPrecision)
-            {
-                int[] acceleration = settings.EnhancePointerPrecision ? [.. PrecisionOn] : [.. PrecisionOff];
-                if (!SystemParametersInfo(SpiSetMouse, 0, acceleration, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"pointer precision ({Marshal.GetLastWin32Error()})");
-            }
-
-            if (settings.ApplyVerticalScroll)
-            {
-                uint lines = (uint)Math.Clamp(settings.VerticalScrollLines, MouseSetting.MinScrollAmount, MouseSetting.MaxScrollAmount);
-                if (!SystemParametersInfo(SpiSetWheelScrollLines, lines, IntPtr.Zero, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"scroll lines ({Marshal.GetLastWin32Error()})");
-            }
-
-            if (settings.ApplyHorizontalScroll)
-            {
-                uint chars = (uint)Math.Clamp(settings.HorizontalScrollChars, MouseSetting.MinScrollAmount, MouseSetting.MaxScrollAmount);
-                if (!SystemParametersInfo(SpiSetWheelScrollChars, chars, IntPtr.Zero, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"horizontal scroll ({Marshal.GetLastWin32Error()})");
-            }
-
-            if (settings.ApplySwapButtons)
-            {
-                if (!SystemParametersInfo(SpiSetMouseButtonSwap, settings.SwapButtons ? 1u : 0u, IntPtr.Zero, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"button swap ({Marshal.GetLastWin32Error()})");
-            }
-
-            if (settings.ApplyDoubleClickTime)
-            {
-                uint ms = (uint)MouseSetting.ClampDoubleClickTime(settings.DoubleClickTime);
-                if (!SystemParametersInfo(SpiSetDoubleClickTime, ms, IntPtr.Zero, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"double-click speed ({Marshal.GetLastWin32Error()})");
-            }
-
-            if (settings.ApplyMouseTrails)
-            {
-                uint length = (uint)MouseSetting.NormalizeMouseTrails(settings.MouseTrails);
-                if (!SystemParametersInfo(SpiSetMouseTrails, length, IntPtr.Zero, SpifUpdateIniFileAndSendChange))
-                    failures.Add($"mouse trails ({Marshal.GetLastWin32Error()})");
-            }
+            if (lastAction != 0)
+                BroadcastSettingChange(lastAction);
 
             if (failures.Count > 0)
             {
@@ -109,8 +83,50 @@ namespace DisplayProfileManager.Pointer
                 return false;
             }
 
-            _logger.Info($"Mouse settings applied -> {settings}");
+            _logger.Info($"Mouse settings applied -> {settings} (changed {changes.Count})");
             return true;
+        }
+
+        private static (uint Action, bool Ok, string Label) Write(MouseChange change, MouseSetting settings)
+        {
+            switch (change)
+            {
+                case MouseChange.PointerSpeed:
+                    return (SpiSetMouseSpeed, SystemParametersInfo(SpiSetMouseSpeed, 0, (IntPtr)settings.ClampedPointerSpeed(), SpifUpdateIniFile), "pointer speed");
+                case MouseChange.PointerPrecision:
+                    int[] acceleration = settings.EnhancePointerPrecision ? [.. PrecisionOn] : [.. PrecisionOff];
+                    return (SpiSetMouse, SystemParametersInfo(SpiSetMouse, 0, acceleration, SpifUpdateIniFile), "pointer precision");
+                case MouseChange.VerticalScroll:
+                    return (SpiSetWheelScrollLines, SystemParametersInfo(SpiSetWheelScrollLines, (uint)settings.ClampedVerticalScroll(), IntPtr.Zero, SpifUpdateIniFile), "scroll lines");
+                case MouseChange.HorizontalScroll:
+                    return (SpiSetWheelScrollChars, SystemParametersInfo(SpiSetWheelScrollChars, (uint)settings.ClampedHorizontalScroll(), IntPtr.Zero, SpifUpdateIniFile), "horizontal scroll");
+                case MouseChange.SwapButtons:
+                    return (SpiSetMouseButtonSwap, SystemParametersInfo(SpiSetMouseButtonSwap, settings.SwapButtons ? 1u : 0u, IntPtr.Zero, SpifUpdateIniFile), "button swap");
+                case MouseChange.DoubleClickTime:
+                    return (SpiSetDoubleClickTime, SystemParametersInfo(SpiSetDoubleClickTime, (uint)MouseSetting.ClampDoubleClickTime(settings.DoubleClickTime), IntPtr.Zero, SpifUpdateIniFile), "double-click speed");
+                case MouseChange.MouseTrails:
+                    return (SpiSetMouseTrails, SystemParametersInfo(SpiSetMouseTrails, (uint)MouseSetting.NormalizeMouseTrails(settings.MouseTrails), IntPtr.Zero, SpifUpdateIniFile), "mouse trails");
+                default:
+                    return (0, true, change.ToString());
+            }
+        }
+
+        // One WM_SETTINGCHANGE for the whole batch, off the apply path so a slow window can't stall the switch
+        private static void BroadcastSettingChange(uint action)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    var started = Environment.TickCount64;
+                    SendMessageTimeout(HwndBroadcast, WmSettingChange, (UIntPtr)action, IntPtr.Zero, SmtoAbortIfHung, BroadcastTimeoutMs, out _);
+                    _logger.Debug($"Mouse setting change broadcast took {Environment.TickCount64 - started} ms");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn(ex, "Mouse setting change broadcast failed");
+                }
+            });
         }
     }
 }
