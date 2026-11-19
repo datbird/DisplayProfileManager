@@ -16,6 +16,10 @@ namespace DisplayProfileManager.Audio.Models
         public string PlaybackDeviceName { get; set; } = string.Empty;
         [JsonProperty("captureDeviceName")]
         public string CaptureDeviceName { get; set; } = string.Empty;
+        [JsonProperty("playbackHardwareId")]
+        public string PlaybackHardwareId { get; set; } = string.Empty;
+        [JsonProperty("captureHardwareId")]
+        public string CaptureHardwareId { get; set; } = string.Empty;
         [JsonProperty("applyPlaybackDevice")]
         public bool ApplyPlaybackDevice { get; set; } = false;
         [JsonProperty("applyCaptureDevice")]

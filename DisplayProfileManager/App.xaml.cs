@@ -644,7 +644,7 @@ namespace DisplayProfileManager
             double seconds = Math.Ceiling(e.DurationMilliseconds / 100.0) / 10.0;
             string elapsed = $"{seconds:0.#} {(seconds == 1 ? "second" : "seconds")}";
 
-            string message = ProfileApplyFormatter.AppendApplyWarnings($"{source} in {elapsed}", e.WarningSummary);
+            string message = ProfileApplyFormatter.AppendApplyNotices(ProfileApplyFormatter.AppendApplyWarnings($"{source} in {elapsed}", e.WarningSummary), e.NoticeSummary);
             var icon = string.IsNullOrEmpty(e.WarningSummary) ? TrayNotificationIcon.None : TrayNotificationIcon.Info;
             _trayIcon?.ShowNotification(e.Profile.Name, message, icon);
         }

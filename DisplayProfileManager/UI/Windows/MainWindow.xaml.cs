@@ -892,7 +892,9 @@ namespace DisplayProfileManager.UI.Windows
                             : $"{Math.Ceiling(applyWatch.Elapsed.TotalSeconds * 10) / 10:0.#}")} {(Math.Ceiling(applyWatch.Elapsed.TotalSeconds * 10) / 10 == 1 ? "second" : "seconds")}";
 
                         string warningSummary = ProfileApplyFormatter.GetApplyWarningSummary(applyResult);
-                        StatusTextBlock.Text = ProfileApplyFormatter.AppendApplyWarnings($"'{profile.Name}' applied in {elapsed}", warningSummary);
+                        StatusTextBlock.Text = ProfileApplyFormatter.AppendApplyNotices(
+                            ProfileApplyFormatter.AppendApplyWarnings($"'{profile.Name}' applied in {elapsed}", warningSummary),
+                            ProfileApplyFormatter.GetApplyNoticeSummary(applyResult));
                     }
                 }
                 catch (Exception ex)
@@ -1288,7 +1290,7 @@ namespace DisplayProfileManager.UI.Windows
                 if (!appliedFromThisWindow)
                 {
                     string status = $"'{e.Profile.Name}' {GetApplySource(e.Source)} in {(e.DurationMilliseconds / 1000.0):0.0} seconds";
-                    StatusTextBlock.Text = ProfileApplyFormatter.AppendApplyWarnings(status, e.WarningSummary);
+                    StatusTextBlock.Text = ProfileApplyFormatter.AppendApplyNotices(ProfileApplyFormatter.AppendApplyWarnings(status, e.WarningSummary), e.NoticeSummary);
                 }
             });
         }

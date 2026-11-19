@@ -27,6 +27,12 @@ namespace DisplayProfileManager.UI.Presentation
 
         internal static string AppendApplyWarnings(string message, string warningSummary) => string.IsNullOrEmpty(warningSummary) ? message : $"{message} — {warningSummary} failed to apply";
 
+        // Informational, not a failure: "AT2020USB+ not connected, skipped"
+        internal static string GetApplyNoticeSummary(ProfileApplyResult result) =>
+            result?.AudioNotConnected is { Count: > 0 } missing ? $"{string.Join(", ", missing)} not connected, skipped" : string.Empty;
+
+        internal static string AppendApplyNotices(string message, string noticeSummary) => string.IsNullOrEmpty(noticeSummary) ? message : $"{message} — {noticeSummary}";
+
         internal static string GetApplySourceLabel(ApplySource source) => source switch
         {
             ApplySource.Window => "Applied",

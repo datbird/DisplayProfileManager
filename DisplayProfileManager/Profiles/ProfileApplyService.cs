@@ -169,7 +169,11 @@ namespace DisplayProfileManager.Profiles
                 // Apply Audio Settings
                 var audioWatch = Stopwatch.StartNew();
                 if (profile.AudioSettings?.Enabled == true)
-                    result.AudioSuccess = _audioService.ApplyAudioSettings(profile.AudioSettings);
+                {
+                    var audioOutcome = _audioService.ApplyAudioSettings(profile.AudioSettings);
+                    result.AudioSuccess = audioOutcome.Success;
+                    result.AudioNotConnected = audioOutcome.NotConnected;
+                }
                 audioWatch.Stop();
 
                 // Finalize Result
@@ -240,7 +244,8 @@ namespace DisplayProfileManager.Profiles
                     if (!string.IsNullOrEmpty(warningSummary))
                         _logger.Warn($"Profile '{profile.Name}' applied with warnings: {warningSummary}");
 
-                    ProfileApplied?.Invoke(this, new ProfileAppliedEventArgs(profile, source, totalWatch.ElapsedMilliseconds, warningSummary));
+                    string noticeSummary = ProfileApplyFormatter.GetApplyNoticeSummary(result);
+                    ProfileApplied?.Invoke(this, new ProfileAppliedEventArgs(profile, source, totalWatch.ElapsedMilliseconds, warningSummary, noticeSummary));
                 }
 
                 // Timing Summary

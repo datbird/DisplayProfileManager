@@ -6,6 +6,21 @@ For user-facing release notes, see the [GitHub Releases](https://github.com/exyt
 
 ---
 
+<a id="unreleased"></a>
+## [Unreleased]
+
+### feat — audio device matching
+
+- **Device re-matching** — when a saved endpoint ID is no longer active (new USB port, hub change, driver reinstall), `AudioDeviceMatcher` looks for the device by port-independent hardware ID (`PKEY_AudioEndpoint` parent instance path minus its instance segment, e.g. `USB\VID_0909&PID_001C&MI_00`), then by exact endpoint name. A match is used only when it is unique; shared hardware is narrowed by name, and identical names are never guessed.
+- **Hardware ID capture** — `audioSettings` gains optional `playbackHardwareId` / `captureHardwareId`, filled when the profile is saved in the editor. Profiles without them fall back to name matching; `CurrentSchemaVersion` is unchanged at 6.
+- **Calmer results** — a device that is already the default is skipped. A saved device with no match is reported as `<name> not connected, skipped` in the notification instead of an Audio failure. `ApplyAudioSettings` returns `AudioApplyOutcome`.
+
+### test — regression coverage
+
+- **Matcher coverage** — ID, hardware, shared-hardware tie-break, name, ambiguous name, unplugged, hardware ID parsing, and the not-connected notice.
+
+---
+
 <a id="2.3.3"></a>
 ## [2.3.3] - 2026-10-31
 

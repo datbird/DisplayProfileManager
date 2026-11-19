@@ -120,6 +120,8 @@ namespace DisplayProfileManager.Profiles
                     PlaybackDeviceName = sourceProfile.AudioSettings.PlaybackDeviceName,
                     DefaultCaptureDeviceId = sourceProfile.AudioSettings.DefaultCaptureDeviceId,
                     CaptureDeviceName = sourceProfile.AudioSettings.CaptureDeviceName,
+                    PlaybackHardwareId = sourceProfile.AudioSettings.PlaybackHardwareId,
+                    CaptureHardwareId = sourceProfile.AudioSettings.CaptureHardwareId,
                     ApplyPlaybackDevice = sourceProfile.AudioSettings.ApplyPlaybackDevice,
                     ApplyCaptureDevice = sourceProfile.AudioSettings.ApplyCaptureDevice
                 } : new AudioSetting(),
